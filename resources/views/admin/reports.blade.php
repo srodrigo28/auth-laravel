@@ -24,10 +24,12 @@
                 Dashboard
             </a>
 
-            <a href="#" class="flex items-center gap-3 bg-red-600 text-white p-3 rounded-lg shadow-md">
-                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+            @if(auth()->user()->role === 'admin')
+            <a href="{{ route('admin.relatorios') }}" class="flex items-center gap-3 text-slate-300 hover:text-white hover:bg-slate-700 p-3 rounded-lg transition-colors group">
+                <i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-400 group-hover:text-red-400 transition-colors"></i>
                 Relatórios
             </a>
+            @endif
             
             <a href="#" class="flex items-center gap-3 text-slate-300 hover:text-white hover:bg-slate-700 p-3 rounded-lg transition-colors group">
                 <i data-lucide="users" class="w-5 h-5 text-slate-400 group-hover:text-red-400 transition-colors"></i>
@@ -36,9 +38,11 @@
         </nav>
 
         <div class="p-4 border-t border-slate-700">
-            <button class="flex items-center gap-3 text-sm font-medium text-slate-400 hover:text-white transition w-full p-2 hover:bg-slate-700 rounded-lg">
-                <i data-lucide="log-out" class="w-4 h-4"></i> Sair
-            </button>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf <button type="submit" class="flex items-center gap-3 text-sm font-medium text-slate-400 hover:text-white transition w-full p-2 hover:bg-slate-700 rounded-lg">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -55,7 +59,7 @@
             <div class="flex items-center gap-4">
                 <span class="hidden md:block text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-700">v2.4.0</span>
                 <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-600">
-                    AD
+                    {{ substr(auth()->user()->name, 0, 2) }}
                 </div>
             </div>
         </header>
