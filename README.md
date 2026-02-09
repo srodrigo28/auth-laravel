@@ -13,7 +13,6 @@ Projeto de treinamento em Laravel.
 php artisan serve
 ```
 
-**Prévia**
 <img src="./preview/login.png" alt="Tela de login" width="600">
 <img src="./preview/cadastro.png" alt="Tela de cadastro" width="600">
 <img src="./preview/dashboard.png" alt="Dashboard" width="600">
