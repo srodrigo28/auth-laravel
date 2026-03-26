@@ -1,4 +1,4 @@
-# Laravel Treinamento
+# Laravel Treinamento.
 
 Projeto de treinamento em Laravel.
 
