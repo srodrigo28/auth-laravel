@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Introdução ao Python Flask</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: "#08111f",
+            panel: "#122033",
+            card: "#16283f",
+            border: "#29435f",
+            text: "#e2e8f0",
+            muted: "#cbd5e1",
+            accent: "#22c55e",
+            info: "#14b8a6",
+            warm: "#f59e0b"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --font-body: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+      --font-display: "Sora", "Segoe UI", sans-serif;
+    }
+    body {
+      font-family: var(--font-body);
+      background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.14), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(20, 184, 166, 0.12), transparent 34%),
+        #08111f;
+    }
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      letter-spacing: -0.03em;
+      text-wrap: balance;
+    }
+    p { text-wrap: pretty; }
+    body .text-muted { color: #d6e0ec !important; }
+    body .text-slate-400 { color: #dbe7f5 !important; }
+    body .text-slate-300 { color: #edf4fb !important; }
+    button { font-family: var(--font-body); }
+    .step-content { display: none; }
+    .step-content.active { display: block; }
+    .nav-group-toggle {
+      border-radius: 1rem;
+      color: #e5eef8 !important;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+    .nav-group-toggle:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff !important;
+    }
+    .nav-item {
+      border-color: rgba(255, 255, 255, 0.04);
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+    .nav-item:hover {
+      border-color: rgba(148, 163, 184, 0.2);
+    }
+    .nav-item.active {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: white;
+    }
+    .nav-group-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.2s ease; }
+    .nav-group.open .nav-group-content { grid-template-rows: 1fr; }
+    .nav-group-inner { overflow: hidden; }
+    .nav-group-toggle .chevron { transition: transform 0.2s ease; }
+    .nav-group.open .nav-group-toggle .chevron { transform: rotate(180deg); }
+    #sidebar-drawer {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: min(20rem, 86vw);
+      transform: translateX(-100%);
+      transition: transform 0.22s ease;
+    }
+    #sidebar-drawer.open { transform: translateX(0); }
+    @media (min-width: 768px) {
+      #sidebar-drawer { position: static; width: 18rem; height: 100vh; transform: translateX(0); }
+    }
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      border-radius: 1rem;
+      border: 1px solid #29435f;
+      background: rgba(8, 17, 31, 0.88);
+      padding: 1rem;
+    }
+    code {
+      font-family: "Fira Code", "Courier New", monospace;
+      font-size: 0.88rem;
+      color: #dbeafe;
+    }
+    .code-shell {
+      min-width: 0;
+      max-width: 100%;
+      border-radius: 1rem;
+      border: 1px solid rgba(41, 67, 95, 0.7);
+      overflow: hidden;
+      background: rgba(8, 17, 31, 0.44);
+    }
+    .code-toolbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(41, 67, 95, 0.7);
+      background: rgba(15, 23, 42, 0.78);
+      padding: 0.7rem 0.9rem;
+    }
+    .code-toolbar-label {
+      min-width: 0;
+      flex: 1 1 10rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #d6e0ec;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .code-toolbar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .code-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 0.7rem;
+      border: 1px solid rgba(41, 67, 95, 0.9);
+      background: rgba(22, 40, 63, 0.92);
+      padding: 0.45rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+    }
+    .code-action:hover {
+      border-color: rgba(34, 197, 94, 0.45);
+      background: rgba(34, 197, 94, 0.12);
+      color: #ffffff;
+    }
+    .info-trigger {
+      color: #f8fafc !important;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+    .info-trigger:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff !important;
+    }
+    .section-soft {
+      background: linear-gradient(180deg, rgba(22, 40, 63, 0.82), rgba(8, 17, 31, 0.74));
+      box-shadow: 0 18px 40px rgba(2, 6, 23, 0.18);
+    }
+    .mini-collapse {
+      border-radius: 1rem;
+      border: 1px solid rgba(41, 67, 95, 0.78);
+      background: rgba(8, 17, 31, 0.42);
+      padding: 1rem;
+    }
+    .mini-collapse summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      cursor: pointer;
+      list-style: none;
+    }
+    .mini-collapse summary::-webkit-details-marker {
+      display: none;
+    }
+    .mini-collapse .collapse-chevron {
+      transition: transform 0.18s ease;
+    }
+    .mini-collapse[open] .collapse-chevron {
+      transform: rotate(180deg);
+    }
+    .code-shell pre {
+      border: 0;
+      border-radius: 0;
+    }
+    .code-modal-pre {
+      max-height: calc(100vh - 8rem);
+      overflow: auto;
+      border-radius: 1rem;
+      border: 1px solid #29435f;
+      background: rgba(8, 17, 31, 0.96);
+      padding: 1rem;
+    }
+    .code-modal-pre code {
+      white-space: pre;
+      display: block;
+      min-width: max-content;
+    }
+    @media (min-width: 640px) {
+      .code-toolbar { align-items: center; }
+      .code-toolbar-actions { width: auto; }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-text flex overflow-x-hidden">
+  <div id="sidebar-backdrop" class="fixed inset-0 z-30 hidden bg-slate-950/70 md:hidden" onclick="closeSidebar()"></div>
+
+  <aside id="sidebar-drawer" class="bg-panel border-r border-border flex flex-col h-screen shadow-2xl">
+    <div class="border-b border-border bg-base/70 p-6">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="mb-1 flex items-center gap-2">
+            <i data-lucide="book-open-text" class="h-6 w-6 text-accent"></i>
+            <h1 class="text-lg font-bold text-white">Flask Intro</h1>
+          </div>
+          <p class="text-xs text-muted">Mesmo formato da referência, agora em ordem</p>
+        </div>
+        <button type="button" onclick="closeSidebar()" class="rounded-lg border border-white/10 bg-white/5 p-2 text-muted hover:border-white/20 hover:bg-white/10 hover:text-white md:hidden" aria-label="Fechar menu">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <nav class="flex-1 space-y-3 overflow-y-auto p-4">
+      <div class="nav-group open rounded-2xl border border-white/5 bg-base/40" data-group="intro">
+        <button type="button" onclick="toggleNavGroup('intro')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.18em] text-muted hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="rocket" class="h-3.5 w-3.5"></i> Introdução</span>
+          <i data-lucide="chevron-down" class="chevron h-4 w-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner space-y-1 px-2 pb-2">
+            <button type="button" data-step="step-intro" onclick="showStep('step-intro')" class="nav-item active w-full rounded-xl border border-transparent px-4 py-3 text-left hover:bg-white/5">
+              <span class="block text-sm font-semibold text-white">01. Visão geral</span>
+              <span class="block text-xs text-muted">Mapa da trilha</span>
+            </button>
+            <button type="button" data-step="step-origin" onclick="showStep('step-origin')" class="nav-item w-full rounded-xl border border-transparent px-4 py-3 text-left hover:bg-white/5">
+              <span class="block text-sm font-semibold text-white">02. Como surgiu</span>
+              <span class="block text-xs text-muted">Contexto do Flask</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-group open rounded-2xl border border-white/5 bg-base/40" data-group="base">
+        <button type="button" onclick="toggleNavGroup('base')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.18em] text-muted hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="layers-3" class="h-3.5 w-3.5"></i> Base</span>
+          <i data-lucide="chevron-down" class="chevron h-4 w-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner space-y-1 px-2 pb-2">
+            <button type="button" data-step="step-framework" onclick="showStep('step-framework')" class="nav-item w-full rounded-xl border border-transparent px-4 py-3 text-left hover:bg-white/5">
+              <span class="block text-sm font-semibold text-white">03. O que um framework faz</span>
+              <span class="block text-xs text-muted">Estrutura pronta para o request</span>
+            </button>
+            <button type="button" data-step="step-structure" onclick="showStep('step-structure')" class="nav-item w-full rounded-xl border border-transparent px-4 py-3 text-left hover:bg-white/5">
+              <span class="block text-sm font-semibold text-white">04. Estrutura base</span>
+              <span class="block text-xs text-muted">Pastas e arquivos</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-group open rounded-2xl border border-white/5 bg-base/40" data-group="projeto">
+        <button type="button" onclick="toggleNavGroup('projeto')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.18em] text-muted hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="route" class="h-3.5 w-3.5"></i> Projeto</span>
+          <i data-lucide="chevron-down" class="chevron h-4 w-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner space-y-1 px-2 pb-2">
+            <button type="button" data-step="step-routes" onclick="showStep('step-routes')" class="nav-item w-full rounded-xl border border-transparent px-4 py-3 text-left hover:bg-white/5">
+              <span class="block text-sm font-semibold text-white">05. Rotas e templates</span>
+              <span class="block text-xs text-muted">Ligando URL, regra e HTML</span>
+            </button>
+            <button type="button" data-step="step-flow" onclick="showStep('step-flow')" class="nav-item w-full rounded-xl border border-transparent px-4 py-3 text-left hover:bg-white/5">
+              <span class="block text-sm font-semibold text-white">06. Fluxo completo</span>
+              <span class="block text-xs text-muted">Sequência final do aprendizado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="min-w-0 flex-1 h-screen overflow-y-auto">
+    <header class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-base/85 px-4 py-3 md:hidden">
+      <div>
+        <p class="text-[11px] uppercase tracking-[0.18em] text-muted">Documentação</p>
+        <p class="text-sm font-semibold text-white">Introdução ao Flask</p>
+      </div>
+      <button type="button" onclick="openSidebar()" class="rounded-lg border border-border bg-card px-3 py-2 text-white hover:border-accent hover:text-accent">
+        <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"><i data-lucide="menu" class="h-4 w-4"></i> Menu</span>
+      </button>
+    </header>
+
+    <div class="px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8 xl:px-10 xl:py-10">
+      <div class="mx-auto w-full max-w-[96rem] space-y-8 pb-20">
+        <section id="step-intro" class="step-content active space-y-6">
+          <div class="section-soft rounded-3xl border border-border bg-card/80 p-6 sm:p-7 lg:p-8">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_19rem] lg:items-center">
+              <div>
+                <span class="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-accent">Nova ordem</span>
+                <h2 class="mt-4 text-4xl font-black tracking-tight text-white md:text-5xl">Introdução ao Python Flask com menu sequencial</h2>
+                <p class="mt-4 max-w-3xl text-base leading-8 text-slate-300">Uma trilha de leitura: primeiro contexto, depois fundamentos, depois estrutura e, por fim, o fluxo completo. A página agora conversa com a referência, em vez de vídeos longos.</p>
+              </div>
+              <div class="mx-auto w-full max-w-[19rem] rounded-3xl border border-accent/15 bg-base/70 p-6 lg:mx-0 lg:justify-self-end">
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Resumo</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Painel compacto para leitura rápida da estrutura desta introdução.</p>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-end justify-between gap-4 rounded-2xl border border-border bg-card/70 p-4">
+                    <div>
+                      <p class="text-xs uppercase tracking-[0.18em] text-muted">Diretórios</p>
+                      <p class="mt-1 text-sm leading-6 text-slate-300">Pastas para arquivos</p>
+                    </div>
+                    <p class="text-3xl font-black text-white">3</p>
+                  </div>
+                  <div class="flex items-end justify-between gap-4 rounded-2xl border border-border bg-card/70 p-4">
+                    <div>
+                      <p class="text-xs uppercase tracking-[0.18em] text-muted">Passos</p>
+                      <p class="mt-1 text-sm leading-6 text-slate-300">Arquivos com código</p>
+                    </div>
+                    <p class="text-3xl font-black text-white">6</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 md:grid-cols-3">
+            <div class="rounded-2xl border border-border bg-card/70 p-6"><h3 class="text-lg font-semibold text-white">Mesmo formato</h3><p class="mt-3 text-sm leading-7 text-muted">🎯 Flask: o framework mais utilizado e querido pelos desenvolvedores Python.</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-6"><h3 class="text-lg font-semibold text-white">Mais didático</h3><p class="mt-3 text-sm leading-7 text-muted">🚀Antes do código, a pessoa entende de onde o Flask veio e o que um framework resolve.</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-6"><h3 class="text-lg font-semibold text-white">Leitura em ordem</h3><p class="mt-3 text-sm leading-7 text-muted">⚡ Cada item do menu representa um passo real de aprendizagem.</p></div>
+          </div>
+        </section>
+
+        <section id="step-origin" class="step-content space-y-6">
+          <div class="section-soft rounded-3xl border border-border bg-card/70 p-6 sm:p-7">
+            <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-accent">Contexto</p>
+            <h2 class="mt-2 text-3xl font-bold text-white sm:text-4xl">Como o Flask surgiu</h2>
+            <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+              <div class="space-y-4">
+                <p class="text-sm leading-8 text-slate-300 sm:text-base">Flask é um microframework web em Python. Ele apareceu em abril de 2010 com a proposta de manter um núcleo pequeno, legível e fácil de expandir, sem obrigar o desenvolvedor a começar com uma estrutura pesada.</p>
+                <div class="rounded-2xl border border-border bg-base/45 p-5">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-info">Leitura guiada</p>
+                  <div class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🐍</span><span><strong class="text-white">Python no centro:</strong> o Flask nasceu para ser uma forma leve de criar apps web sem esconder demais o que acontece no código.</span></p>
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🧩</span><span><strong class="text-white">Estrutura enxuta:</strong> a proposta inicial era entregar o essencial, deixando o projeto crescer por extensões e não por peso no núcleo.</span></p>
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">📚</span><span><strong class="text-white">Didático por natureza:</strong> por mostrar claramente rota, request, response e template, ele virou uma das portas de entrada mais fortes para web em Python.</span></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-base/55 p-5">
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Mapa rápido da origem</p>
+                <div class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+                  <div class="rounded-2xl border border-border bg-card/70 p-4">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🚀</span><span><strong class="text-white">Abril de 2010:</strong> o projeto apareceu publicamente e chamou atenção pela simplicidade.</span></p>
+                  </div>
+                  <div class="rounded-2xl border border-border bg-card/70 p-4">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🧪</span><span><strong class="text-white">Experimento leve:</strong> a ideia inicial não era virar um bloco pesado, e sim um framework flexível e fácil de entender.</span></p>
+                  </div>
+                  <div class="rounded-2xl border border-border bg-card/70 p-4">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🌍</span><span><strong class="text-white">Contexto de origem:</strong> ele se consolidou no ecossistema Pocoo, ligado ao trabalho de Armin Ronacher na Áustria, com Viena como referência pública mais fácil de localizar.</span></p>
+                  </div>
+                </div>
+             
+                
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div class="rounded-2xl border border-border bg-card/70 p-5">
+              <p class="text-xs uppercase tracking-[0.18em] text-muted">Lançamento</p>
+              <p class="mt-2 text-2xl font-black text-white">1 abr 2010</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Data associada ao início público do projeto.</p>
+            </div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5">
+              <p class="text-xs uppercase tracking-[0.18em] text-muted">País de origem</p>
+              <p class="mt-2 text-lg font-bold text-white">Áustria</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Referência ligada ao contexto do criador.</p>
+            </div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5">
+              <p class="text-xs uppercase tracking-[0.18em] text-muted">Cidade de referência</p>
+              <p class="mt-2 text-lg font-bold text-white">Viena</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Cidade pública mais associada ao criador hoje.</p>
+            </div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5">
+              <p class="text-xs uppercase tracking-[0.18em] text-muted">Ecossistema inicial</p>
+              <p class="mt-2 text-lg font-bold text-white">Pocoo</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Grupo e comunidade de entusiastas de Python.</p>
+            </div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5">
+              <p class="text-xs uppercase tracking-[0.18em] text-muted">Mentor</p>
+              <button type="button" class="info-trigger mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm font-extrabold text-accent" data-info-title="Armin Ronacher" data-info-body="Armin Ronacher é um desenvolvedor de software austríaco, reconhecido como criador do Flask. A formação mais amplamente atribuída a ele está ligada a Business Administration and Software Engineering, com referência frequente à TU Graz. Sua área de atuação envolve desenvolvimento de software, open source, criação de produtos, APIs e engenharia de plataforma.">
+                <i data-lucide="user" class="h-4 w-4"></i>
+                Armin Ronacher
+              </button>
+              <p class="mt-3 text-sm leading-7 text-slate-300">Abra para ver país, formação e área de atuação.</p>
+            </div>
+          </div>
+
+          <div class="grid gap-4 lg:grid-cols-3">
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-sm font-semibold text-white">Base enxuta</p><p class="mt-2 text-sm leading-7 text-muted">A ideia é ensinar e construir sem excesso de convenção logo no começo.</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-sm font-semibold text-white">Peças reaproveitadas</p><p class="mt-2 text-sm leading-7 text-muted">Ele usa componentes bem consolidados para request, response e templates.</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-sm font-semibold text-white">Crescimento gradual</p><p class="mt-2 text-sm leading-7 text-muted">Começa pequeno e aceita extensões quando a aplicação deixa de ser só introdução.</p></div>
+          </div>
+        </section>
+
+        <section id="step-framework" class="step-content space-y-6">
+          <div class="section-soft rounded-3xl border border-border bg-card/70 p-6 sm:p-7">
+            <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-info">Fundamento</p>
+            <h2 class="mt-2 text-3xl font-bold text-white sm:text-4xl">O que um framework faz na prática</h2>
+            <div class="mt-5 flex flex-wrap gap-2">
+              <span class="inline-flex items-center rounded-full border border-info/25 bg-info/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Infra pronta</span>
+              <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Request</span>
+              <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Roteamento</span>
+              <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Response</span>
+            </div>
+            <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+              <div class="space-y-4">
+                <p class="text-sm leading-8 text-slate-300 sm:text-base">Um framework organiza o caminho do request. Ele recebe a URL, encontra a função certa, oferece ferramentas prontas e devolve uma resposta padronizada. Você foca na regra, não em remontar a fundação toda vez.</p>
+                <div class="rounded-2xl border border-border bg-base/45 p-5">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-info">Memorize assim</p>
+                  <div class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">📥</span><span><strong class="text-white">Recebe:</strong> o framework aceita a requisição e organiza os dados técnicos de entrada.</span></p>
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🧭</span><span><strong class="text-white">Encaminha:</strong> ele encontra a rota certa e conecta sua função ao caminho que o usuário pediu.</span></p>
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">📤</span><span><strong class="text-white">Entrega:</strong> ele empacota a resposta e devolve HTML, JSON ou outro retorno de forma padronizada.</span></p>
+                  </div>
+                </div>
+                <details class="bg-card border border-border rounded-xl shadow-lg mb-8 group overflow-hidden cursor-pointer open:bg-card/80 transition-colors">
+    
+    <summary class="flex items-center justify-between p-6 list-none hover:bg-white/5 transition-colors focus:outline-none">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                <i data-lucide="zap" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-xl md:text-2xl font-bold text-white">O que é o Flask?</h3>
+                <p class="text-xs font-mono text-emerald-400 mt-1">A Filosofia do Microframework</p>
+            </div>
+        </div>
+        
+        <div class="w-8 h-8 rounded-full bg-base flex items-center justify-center border border-border group-open:rotate-180 transition-transform duration-300">
+            <i data-lucide="chevron-down" class="w-4 h-4 text-muted"></i>
+        </div>
+    </summary>
+
+    <div class="px-6 pb-6 pt-4 border-t border-border/50 bg-base/30 cursor-default">
+        <p class="text-muted leading-relaxed mb-6 max-w-3xl">
+            O Flask é um <strong>Microframework</strong> para Python. O termo "micro" não significa que ele é fraco ou apenas para projetos pequenos. Significa que ele não toma decisões por você. Enquanto frameworks maiores (como o Django) te obrigam a usar o banco de dados e a estrutura de pastas deles, o Flask te entrega apenas o núcleo essencial para a web funcionar e sai do seu caminho.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-card border border-border rounded-lg p-4 hover:border-emerald-500/50 transition-colors">
+                <div class="flex items-center gap-2 mb-2 text-white font-semibold">
+                    <i data-lucide="box" class="w-4 h-4 text-emerald-400"></i> O Núcleo (Core)
+                </div>
+                <p class="text-xs text-muted">
+                    O Flask puro traz apenas o roteamento de URLs (Werkzeug) e a renderização de telas HTML (Jinja2). Você sobe um servidor muito rápido.
+                </p>
+            </div>
+
+            <div class="bg-card border border-border rounded-lg p-4 hover:border-emerald-500/50 transition-colors">
+                <div class="flex items-center gap-2 mb-2 text-white font-semibold">
+                    <i data-lucide="blocks" class="w-4 h-4 text-emerald-400"></i> Extensível (Lego)
+                </div>
+                <p class="text-xs text-muted">
+                    Precisa de Banco de Dados? Instale uma extensão. Autenticação JWT? Instale outra. Você monta a sua API como peças de Lego.
+                </p>
+            </div>
+
+            <div class="bg-card border border-border rounded-lg p-4 hover:border-emerald-500/50 transition-colors">
+                <div class="flex items-center gap-2 mb-2 text-white font-semibold">
+                    <i data-lucide="scale" class="w-4 h-4 text-emerald-400"></i> Flexibilidade Absoluta
+                </div>
+                <p class="text-xs text-muted">
+                    Você dita as regras. É você quem decide como organizar os diretórios, onde colocar as regras de negócio e qual arquitetura usar.
+                </p>
+            </div>
+        </div>
+    </div>
+</details>
+              </div>
+              <div class="rounded-2xl border border-border bg-base/55 p-5">
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Ligação mental rápida</p>
+                <div class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+                  <div class="rounded-2xl border border-border bg-card/70 p-4">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🛠️</span><span><strong class="text-white">O que ele entrega:</strong> estrutura reutilizável para request, rota, resposta e integrações.</span></p>
+                  </div>
+                  <div class="rounded-2xl border border-border bg-card/70 p-4">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🚫</span><span><strong class="text-white">O que ele evita:</strong> você reescrever servidor, mapeamento de URL e tratamento básico toda vez.</span></p>
+                  </div>
+                  <div class="rounded-2xl border border-border bg-card/70 p-4">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🧠</span><span><strong class="text-white">Fórmula simples:</strong> o framework segura a estrada; você decide o que acontece dentro da aplicação.</span></p>
+                  </div>
+                </div>
+                <button type="button" class="info-trigger mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-info/25 bg-info/10 px-4 py-3 text-sm font-extrabold text-info" data-info-title="Leitura mental de framework" data-info-body="Pense no framework como a infraestrutura repetitiva que já vem pronta. O seu trabalho passa a ser decidir o comportamento da aplicação, e não reinventar o fluxo técnico básico.">
+                  <i data-lucide="lightbulb" class="h-4 w-4"></i>
+                  Leitura rápida
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
+            <div class="code-shell">
+              <div class="code-toolbar">
+                <span class="code-toolbar-label">app.py</span>
+                <div class="code-toolbar-actions">
+                  <button type="button" class="code-action copy-trigger" data-copy-target="framework-code">Copiar</button>
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app.py" data-expand-target="framework-code">Expandir</button>
+                </div>
+              </div>
+              <pre><code id="framework-code">from flask import Flask
+
+app = Flask(__name__)
+
+@app.get("/")
+def home():
+    return "Flask recebeu a rota e devolveu uma resposta."</code></pre>
+            </div>
+            <div class="rounded-3xl border border-border bg-base/55 p-5">
+              <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Leitura do exemplo</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Cria</span>
+                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Liga</span>
+                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Entrega</span>
+              </div>
+              <div class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">1.</span><span><strong class="text-white">`Flask(__name__)`</strong> cria a aplicação e abre a estrutura principal.</span></p>
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">2.</span><span><strong class="text-white">`@app.get("/")`</strong> liga a URL a uma função que o framework vai chamar.</span></p>
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">3.</span><span><strong class="text-white">`return`</strong> vira a resposta enviada ao navegador no formato certo.</span></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="step-structure" class="step-content space-y-6">
+          <div class="section-soft rounded-3xl border border-border bg-card/70 p-6 sm:p-7">
+            <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-warm">Estrutura</p>
+            <h2 class="mt-2 text-3xl font-bold text-white sm:text-4xl">Como organizar o projeto desde o início</h2>
+            <p class="mt-4 max-w-4xl text-sm leading-8 text-slate-300 sm:text-base">Mesmo em um projeto pequeno, separar app, rotas, controllers e templates deixa o aprendizado mais claro e evita misturar tudo no mesmo arquivo.</p>
+            <div class="mt-5 rounded-2xl border border-border bg-base/45 p-5">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-3xl">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-warm">Requisito do ambiente</p>
+                  <h3 class="mt-2 text-xl font-bold text-white">Escolha o sistema operacional antes de montar sua base</h3>
+                  <p class="mt-3 text-sm leading-7 text-slate-300">Para estudar Flask com consistência, você precisa de um sistema operacional confiável. Considerando o desktop global e agrupando a família Apple (`OS X` + `macOS`) em uma mesma leitura, os três nomes mais fortes hoje para esse contexto são `Windows`, `macOS` e `Linux`.</p>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Desktop global • jan. 2026</span>
+              </div>
+              <p class="mt-4 text-sm leading-7 text-muted">Clique em um sistema para abrir um modal com biografia rápida, origem, datas importantes, criadores e sistemas derivados.</p>
+              <div class="mt-5 grid gap-4 lg:grid-cols-3">
+                <button type="button" class="info-trigger w-full rounded-3xl border border-border bg-card/70 p-5 text-left" data-info-title="Windows" data-info-body="🪟 Sistema: Microsoft Windows||📈 Popularidade desktop (jan. 2026): 67,7% no recorte global do StatCounter||🗓️ Lançamento inicial: 20 de novembro de 1985 (Windows 1.0)||🏢 Criador: Microsoft, com impulso inicial de Bill Gates e da equipe Windows||🌎 Origem: Estados Unidos, com forte associação a Redmond, Washington||🧬 Derivados e família: Windows 95, XP, 7, 10, 11 e Windows Server||📌 Datas importantes: 1985 (Windows 1.0) • 1995 (Windows 95) • 2001 (XP) • 2015 (Windows 10) • 2021 (Windows 11)||🧠 Leitura rápida: domina o desktop porque virou o ambiente padrão do PC pessoal e corporativo por décadas.">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs uppercase tracking-[0.18em] text-muted">Windows</p>
+                      <p class="mt-2 text-2xl font-black text-white">67.7%</p>
+                    </div>
+                    <span class="inline-flex rounded-full border border-warm/25 bg-warm/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Líder</span>
+                  </div>
+                  <p class="mt-4 text-sm leading-7 text-slate-300">Mais usado no desktop. Bom para quem quer amplitude de compatibilidade e ambiente familiar.</p>
+                </button>
+
+                <button type="button" class="info-trigger w-full rounded-3xl border border-border bg-card/70 p-5 text-left" data-info-title="macOS" data-info-body="🍎 Sistema: macOS (família Apple, considerando OS X + macOS no recorte de mercado)||📈 Popularidade desktop (jan. 2026): 11,79% ao somar OS X (7,03%) e macOS (4,76%) no StatCounter||🗓️ Base moderna: 24 de março de 2001 (Mac OS X 10.0)||🏢 Criador: Apple||🌎 Origem: Estados Unidos, com forte associação a Cupertino, Califórnia||🧬 Derivados e linhagem: Mac OS X, OS X e macOS; base moderna apoiada em Darwin e em fundamentos UNIX||📌 Datas importantes: 1984 (Macintosh System Software) • 2001 (Mac OS X) • 2012 (fase OS X) • 2016 (nome macOS)||🧠 Leitura rápida: é forte entre pessoas que buscam integração entre hardware e software e um ambiente Unix-like mais polido.">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs uppercase tracking-[0.18em] text-muted">macOS</p>
+                      <p class="mt-2 text-2xl font-black text-white">11.79%</p>
+                    </div>
+                    <span class="inline-flex rounded-full border border-info/25 bg-info/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Apple</span>
+                  </div>
+                  <p class="mt-4 text-sm leading-7 text-slate-300">Ambiente Unix-like com forte integração no ecossistema Apple. Muito usado por quem trabalha com dev e criação.</p>
+                </button>
+
+                <button type="button" class="info-trigger w-full rounded-3xl border border-border bg-card/70 p-5 text-left" data-info-title="Linux" data-info-body="🐧 Sistema: Linux||📈 Popularidade desktop (jan. 2026): 4,02% no recorte global do StatCounter||🗓️ Início público: 25 de agosto de 1991 (anúncio) e setembro de 1991 (primeiras versões públicas do kernel)||🧑‍💻 Criador: Linus Torvalds||🌎 Origem: Finlândia, com forte associação a Helsinque||🧬 Derivados: Ubuntu, Debian, Fedora, Arch, Mint; além de bases ligadas a Android e ChromeOS via kernel Linux||📌 Datas importantes: 1991 (anúncio) • 1994 (Linux 1.0) • 2007 (Linux Foundation)||🧠 Leitura rápida: no desktop tem fatia menor, mas em desenvolvimento, servidores e infraestrutura ele tem peso enorme.">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs uppercase tracking-[0.18em] text-muted">Linux</p>
+                      <p class="mt-2 text-2xl font-black text-white">4.02%</p>
+                    </div>
+                    <span class="inline-flex rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Dev</span>
+                  </div>
+                  <p class="mt-4 text-sm leading-7 text-slate-300">Menor no desktop global, mas muito forte em programação, servidores, automação e infraestrutura.</p>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 xl:grid-cols-2">
+            <div class="rounded-3xl border border-border bg-base/55 p-5">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-info">Antes da estrutura</p>
+                  <h3 class="mt-2 text-xl font-bold text-white">1. Verificar se o Python está instalado</h3>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Checklist</span>
+              </div>
+              <p class="mt-3 text-sm leading-7 text-slate-300">Antes de criar pastas e arquivos, confirme se o ambiente reconhece o Python. Isso evita montar a estrutura e descobrir depois que o interpretador nem está pronto.</p>
+              <div class="mt-4 code-shell">
+                <div class="code-toolbar">
+                  <span class="code-toolbar-label">verificar python</span>
+                  <div class="code-toolbar-actions">
+                    <button type="button" class="code-action copy-trigger" data-copy-target="python-check-code">Copiar</button>
+                    <button type="button" class="code-action expand-trigger" data-expand-title="verificar python" data-expand-target="python-check-code">Expandir</button>
+                  </div>
+                </div>
+                <pre><code id="python-check-code">python --version
+py --version</code></pre>
+              </div>
+              <div class="mt-4 space-y-2 text-sm leading-7 text-slate-300">
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">✅</span><span>Se aparecer a versão, o Python está acessível no terminal.</span></p>
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">⚠️</span><span>Se o comando falhar, primeiro ajuste a instalação ou o PATH antes de seguir.</span></p>
+              </div>
+            </div>
+
+            <div class="rounded-3xl border border-border bg-base/55 p-5">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Base mínima</p>
+                  <h3 class="mt-2 text-xl font-bold text-white">2. Ativar o venv e instalar o Flask</h3>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">Venv + Dependência</span>
+              </div>
+              <p class="mt-3 text-sm leading-7 text-slate-300">Com o Python confirmado, o ideal é ativar um ambiente virtual antes de instalar qualquer dependência. Assim o projeto fica isolado, limpo e mais fácil de manter.</p>
+              <details class="mini-collapse mt-4">
+                <summary>
+                  <span class="flex items-center gap-3">
+                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-lg">✨</span>
+                    <span>
+                      <span class="block text-sm font-bold text-white">Preparar ambiente virtual (venv)</span>
+                      <span class="block text-xs text-muted">Clique para ver como criar e ativar antes do Flask</span>
+                    </span>
+                  </span>
+                  <i data-lucide="chevron-down" class="collapse-chevron h-4 w-4 text-white"></i>
+                </summary>
+                <div class="mt-4 space-y-4">
+                  <p class="text-sm leading-7 text-slate-300">O `venv` cria um ambiente isolado para o projeto. Isso evita conflito entre bibliotecas de estudos diferentes e deixa seu treinamento mais organizado.</p>
+                  <div class="code-shell">
+                    <div class="code-toolbar">
+                      <span class="code-toolbar-label">criar e ativar venv</span>
+                      <div class="code-toolbar-actions">
+                        <button type="button" class="code-action copy-trigger" data-copy-target="venv-activate-code">Copiar</button>
+                        <button type="button" class="code-action expand-trigger" data-expand-title="criar e ativar venv" data-expand-target="venv-activate-code">Expandir</button>
+                      </div>
+                    </div>
+                    <pre><code id="venv-activate-code">python -m venv .venv
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# Linux / macOS
+source .venv/bin/activate</code></pre>
+                  </div>
+                  <div class="space-y-2 text-sm leading-7 text-slate-300">
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🧪</span><span>Use esse ambiente para instalar apenas o que pertence a este projeto.</span></p>
+                    <p class="flex items-start gap-3"><span class="text-lg leading-none">🧼</span><span>Isso reduz bagunça e evita misturar bibliotecas com outros estudos ou apps.</span></p>
+                  </div>
+                </div>
+              </details>
+              <p class="mt-4 text-sm leading-7 text-slate-300">Depois que o `venv` estiver ativo, aí sim entre com a biblioteca principal. O mais seguro é usar `python -m pip`, porque isso garante que o `pip` usado é o do seu interpretador atual.</p>
+              <div class="mt-4 code-shell">
+                <div class="code-toolbar">
+                  <span class="code-toolbar-label">instalar flask</span>
+                  <div class="code-toolbar-actions">
+                    <button type="button" class="code-action copy-trigger" data-copy-target="flask-install-code">Copiar</button>
+                    <button type="button" class="code-action expand-trigger" data-expand-title="instalar flask" data-expand-target="flask-install-code">Expandir</button>
+                  </div>
+                </div>
+                <pre><code id="flask-install-code">python -m pip install flask</code></pre>
+              </div>
+              <div class="mt-4 space-y-2 text-sm leading-7 text-slate-300">
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">📦</span><span>Esse comando baixa e instala o Flask no ambiente em uso.</span></p>
+                <p class="flex items-start gap-3"><span class="text-lg leading-none">🧪</span><span>Depois disso, você já pode testar um `app.py` mínimo e validar se o framework está pronto.</span></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
+            <div class="code-shell">
+              <div class="code-toolbar">
+                <span class="code-toolbar-label">estrutura do projeto</span>
+                <div class="code-toolbar-actions">
+                  <button type="button" class="code-action copy-trigger" data-copy-target="tree-code">Copiar</button>
+                  <button type="button" class="code-action expand-trigger" data-expand-title="estrutura do projeto" data-expand-target="tree-code">Expandir</button>
+                </div>
+              </div>
+              <pre><code id="tree-code">flask-intro/
+|-- app.py
+|-- config.py
+`-- app/
+    |-- controllers/
+    |   `-- page_controller.py
+    |-- routes/
+    |   `-- page_routes.py
+    `-- templates/
+        |-- base.html
+        |-- home.html
+        `-- about.html</code></pre>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <div class="rounded-2xl border border-border bg-base/45 p-4"><p class="text-xs uppercase tracking-[0.18em] text-slate-400">app.py</p><p class="mt-2 text-sm leading-7 text-slate-300">Sobe a aplicação e registra as rotas.</p></div>
+              <div class="rounded-2xl border border-border bg-base/45 p-4"><p class="text-xs uppercase tracking-[0.18em] text-slate-400">controllers</p><p class="mt-2 text-sm leading-7 text-slate-300">Preparam os dados antes da resposta.</p></div>
+              <div class="rounded-2xl border border-border bg-base/45 p-4"><p class="text-xs uppercase tracking-[0.18em] text-slate-400">routes</p><p class="mt-2 text-sm leading-7 text-slate-300">Definem os endpoints e a entrada do request.</p></div>
+              <div class="rounded-2xl border border-border bg-base/45 p-4"><p class="text-xs uppercase tracking-[0.18em] text-slate-400">templates</p><p class="mt-2 text-sm leading-7 text-slate-300">Montam o HTML dinâmico com Jinja.</p></div>
+            </div>
+          </div>
+
+          <div id="reference-library" class="rounded-3xl border border-border bg-base/55 p-5 sm:p-6">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div class="max-w-3xl">
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Referência colapsável</p>
+                <h3 class="mt-2 text-2xl font-bold text-white">Abra cada arquivo e entenda o papel dele</h3>
+                <p class="mt-3 text-sm leading-7 text-slate-300">No fim desta etapa, você pode abrir um card por arquivo para revisar o código e usar o botão <strong class="text-white">Saiba mais</strong> quando quiser uma explicação rápida, organizada e fácil de memorizar.</p>
+              </div>
+              <span class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">7 arquivos-chave</span>
+            </div>
+
+            <div class="mt-5 grid gap-4 xl:grid-cols-2">
+              <div class="rounded-3xl border border-border bg-card/70 p-5">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-lg">🚀</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">app.py</p>
+                    <p class="mt-1 text-xs text-muted">Ponto de entrada da aplicação</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">Centraliza a criação do app e é o primeiro arquivo a observar quando você quiser entender como o projeto começa a rodar.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app.py" data-expand-target="file-app-py-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-app-py-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm font-extrabold text-accent" data-info-title="app.py" data-info-body="🚀 Função: é o ponto de entrada da aplicação||🧱 Papel: cria o app Flask e conecta as rotas principais||📌 Quando lembrar dele: sempre que quiser saber como o projeto começa a rodar||🧠 Leitura rápida: sem ele, a aplicação não sobe de forma organizada."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-app-py-code">from flask import Flask
+from app.routes.page_routes import page_bp
+
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(page_bp)
+    return app
+
+app = create_app()
+
+if __name__ == "__main__":
+    app.run(debug=True)</code></pre></div>
+              </div>
+
+              <div class="rounded-3xl border border-border bg-card/70 p-5">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-info/20 bg-info/10 text-lg">⚙️</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">config.py</p>
+                    <p class="mt-1 text-xs text-muted">Configurações centrais</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">Guarda ajustes globais e evita espalhar configurações em vários pontos da aplicação.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="config.py" data-expand-target="file-config-py-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-config-py-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-info/25 bg-info/10 px-4 py-3 text-sm font-extrabold text-info" data-info-title="config.py" data-info-body="⚙️ Função: concentra ajustes globais do projeto||🔐 Uso comum: chaves, flags e configurações do ambiente||📌 Quando lembrar dele: sempre que precisar mudar comportamento geral sem espalhar valores pelo código||🧠 Leitura rápida: ele evita que a configuração fique bagunçada em vários arquivos."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-config-py-code">class Config:
+    SECRET_KEY = "dev"
+    TEMPLATES_AUTO_RELOAD = True</code></pre></div>
+              </div>
+
+              <div class="rounded-3xl border border-border bg-card/70 p-5">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg">🧠</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">app/controllers/page_controller.py</p>
+                    <p class="mt-1 text-xs text-muted">Regras antes da resposta</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">Ajuda a tirar peso das rotas e concentra a preparação dos dados antes do template.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/controllers/page_controller.py" data-expand-target="file-controller-py-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-controller-py-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-extrabold text-white" data-info-title="page_controller.py" data-info-body="🧠 Função: prepara dados antes de renderizar a resposta||📦 Papel: organiza o que vai para o template||📌 Quando lembrar dele: quando a rota começar a ficar carregada demais||🧠 Leitura rápida: controller existe para deixar a rota mais limpa e o fluxo mais legível."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-controller-py-code">from flask import render_template
+
+def home():
+    dados = {"titulo": "Página inicial"}
+    return render_template("home.html", **dados)
+
+def about():
+    equipe = ["Rotas", "Templates", "Organizacao"]
+    return render_template("about.html", equipe=equipe)</code></pre></div>
+              </div>
+
+              <div class="rounded-3xl border border-border bg-card/70 p-5">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg">🧭</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">app/routes/page_routes.py</p>
+                    <p class="mt-1 text-xs text-muted">Entradas e caminhos</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">É a porta de entrada: define as URLs que o navegador pode chamar e para onde cada uma aponta.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/routes/page_routes.py" data-expand-target="file-routes-py-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-routes-py-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-extrabold text-white" data-info-title="page_routes.py" data-info-body="🧭 Função: define os caminhos que o navegador pode acessar||🔗 Papel: liga URL, método HTTP e função do sistema||📌 Quando lembrar dele: sempre que criar uma nova página ou endpoint||🧠 Leitura rápida: rotas são a porta de entrada do seu projeto."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-routes-py-code">from flask import Blueprint
+from app.controllers.page_controller import home, about
+
+page_bp = Blueprint("page", __name__)
+
+@page_bp.get("/")
+def home_page():
+    return home()
+
+@page_bp.get("/sobre")
+def about_page():
+    return about()</code></pre></div>
+              </div>
+
+              <div class="rounded-3xl border border-border bg-card/70 p-5">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-lg">🧱</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">app/templates/base.html</p>
+                    <p class="mt-1 text-xs text-muted">Layout principal</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">É a estrutura visual compartilhada. Tudo o que se repete na interface tende a nascer aqui.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/templates/base.html" data-expand-target="file-base-html-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-base-html-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm font-extrabold text-accent" data-info-title="base.html" data-info-body="🧱 Função: é a base visual reaproveitável do projeto||🎨 Papel: define a estrutura que outras páginas herdam||📌 Quando lembrar dele: ao montar cabeçalho, rodapé e áreas comuns||🧠 Leitura rápida: ele evita repetir HTML nas páginas."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-base-html-code">&lt;!doctype html&gt;
+&lt;html lang="pt-BR"&gt;
+&lt;body&gt;
+  &lt;main&gt;{% block content %}{% endblock %}&lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+              </div>
+
+              <div class="rounded-3xl border border-border bg-card/70 p-5">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-info/20 bg-info/10 text-lg">🏠</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">app/templates/home.html</p>
+                    <p class="mt-1 text-xs text-muted">Página inicial</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">Mostra o conteúdo principal da primeira tela e ajuda a entender herança de template na prática.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/templates/home.html" data-expand-target="file-home-html-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-home-html-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-info/25 bg-info/10 px-4 py-3 text-sm font-extrabold text-info" data-info-title="home.html" data-info-body="🏠 Função: mostra o conteúdo principal da página inicial||🧩 Papel: herda o layout de base e troca apenas a área central||📌 Quando lembrar dele: ao criar a primeira tela visível do usuário||🧠 Leitura rápida: é o exemplo mais simples de herança de template."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-home-html-code">{% extends "base.html" %}
+
+{% block content %}
+  &lt;h2&gt;{{ titulo }}&lt;/h2&gt;
+{% endblock %}</code></pre></div>
+              </div>
+
+              <div class="rounded-3xl border border-border bg-card/70 p-5 xl:col-span-2">
+                <div class="flex items-start gap-3">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg">📄</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-white">app/templates/about.html</p>
+                    <p class="mt-1 text-xs text-muted">Página de apresentação e lista</p>
+                  </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-300">É um ótimo exemplo para lembrar como o Jinja trabalha com listas e repetição dentro do HTML, sem precisar expandir um card no meio da grade.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/templates/about.html" data-expand-target="file-about-html-code"><i data-lucide="file-code-2" class="h-4 w-4"></i><span>Ver código</span></button>
+                  <button type="button" class="code-action copy-trigger" data-copy-target="file-about-html-code"><i data-lucide="copy" class="h-4 w-4"></i><span>Copiar</span></button>
+                  <button type="button" class="info-trigger inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-extrabold text-white" data-info-title="about.html" data-info-body="📄 Função: monta uma página de apresentação com conteúdo dinâmico||🔁 Papel: mostra como repetir itens usando um loop do Jinja||📌 Quando lembrar dele: ao renderizar listas, menus e blocos repetidos||🧠 Leitura rápida: ele prova que template não serve só para texto fixo."><i data-lucide="sparkles" class="h-4 w-4"></i>Saiba mais</button>
+                </div>
+                <div style="display:none"><pre><code id="file-about-html-code">{% extends "base.html" %}
+
+{% block content %}
+  &lt;ul&gt;
+    {% for item in equipe %}
+      &lt;li&gt;{{ item }}&lt;/li&gt;
+    {% endfor %}
+  &lt;/ul&gt;
+{% endblock %}</code></pre></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="step-routes" class="step-content space-y-6">
+          <div class="section-soft rounded-3xl border border-border bg-card/70 p-6 sm:p-7">
+            <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-accent">Aplicação</p>
+            <h2 class="mt-2 text-3xl font-bold text-white sm:text-4xl">Como rotas, regra e template se conectam</h2>
+            <p class="mt-4 max-w-4xl text-sm leading-8 text-slate-300 sm:text-base">A rota recebe o caminho, o controller organiza os dados e o template monta a página. Esse trio precisa aparecer junto porque é exatamente isso que o iniciante precisa visualizar.</p>
+          </div>
+
+          <div class="grid gap-6 xl:grid-cols-2">
+            <div class="code-shell">
+              <div class="code-toolbar">
+                <span class="code-toolbar-label">app/routes/page_routes.py</span>
+                <div class="code-toolbar-actions">
+                  <button type="button" class="code-action copy-trigger" data-copy-target="routes-code">Copiar</button>
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/routes/page_routes.py" data-expand-target="routes-code">Expandir</button>
+                </div>
+              </div>
+              <pre><code id="routes-code">from flask import Blueprint
+from app.controllers.page_controller import home
+
+page_bp = Blueprint("page", __name__)
+
+@page_bp.get("/")
+def home_page():
+    return home()</code></pre>
+            </div>
+            <div class="code-shell">
+              <div class="code-toolbar">
+                <span class="code-toolbar-label">app/controllers/page_controller.py</span>
+                <div class="code-toolbar-actions">
+                  <button type="button" class="code-action copy-trigger" data-copy-target="controller-code">Copiar</button>
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/controllers/page_controller.py" data-expand-target="controller-code">Expandir</button>
+                </div>
+              </div>
+              <pre><code id="controller-code">from flask import render_template
+
+def home():
+    dados = {"titulo": "Página inicial"}
+    return render_template("home.html", **dados)</code></pre>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-border bg-base/55 p-5">
+            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Template mínimo</p>
+            <div class="mt-4 code-shell">
+              <div class="code-toolbar">
+                <span class="code-toolbar-label">app/templates/home.html</span>
+                <div class="code-toolbar-actions">
+                  <button type="button" class="code-action copy-trigger" data-copy-target="template-code">Copiar</button>
+                  <button type="button" class="code-action expand-trigger" data-expand-title="app/templates/home.html" data-expand-target="template-code">Expandir</button>
+                </div>
+              </div>
+              <pre><code id="template-code">{% extends "base.html" %}
+
+{% block content %}
+  &lt;h2&gt;{{ titulo }}&lt;/h2&gt;
+{% endblock %}</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="step-flow" class="step-content space-y-6">
+          <div class="section-soft rounded-3xl border border-border bg-card/70 p-6 sm:p-7">
+            <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-info">Fechamento</p>
+            <h2 class="mt-2 text-3xl font-bold text-white sm:text-4xl">Fluxo completo do aprendizado e da aplicação</h2>
+            <p class="mt-4 max-w-4xl text-sm leading-8 text-slate-300 sm:text-base">A sequência agora faz sentido tanto no menu quanto no código: entender o motivo, entender a ferramenta, montar a estrutura, ligar as camadas e só depois expandir o projeto.</p>
+            <button type="button" class="info-trigger mt-5 inline-flex items-center gap-2 rounded-full border border-info/25 bg-info/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-info" data-info-title="O que mudou no menu" data-info-body="Agora cada entrada do menu acompanha a ordem que faz sentido para aprender: contexto, fundamento, estrutura e ligação das camadas. O menu virou parte da explicação, não apenas navegação.">
+              <i data-lucide="info" class="h-4 w-4"></i>
+              O que mudou
+            </button>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-xs uppercase tracking-[0.18em] text-muted">01</p><p class="mt-2 text-sm font-semibold text-white">Browser chama a URL</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-xs uppercase tracking-[0.18em] text-muted">02</p><p class="mt-2 text-sm font-semibold text-white">Flask encontra a rota</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-xs uppercase tracking-[0.18em] text-muted">03</p><p class="mt-2 text-sm font-semibold text-white">Controller prepara os dados</p></div>
+            <div class="rounded-2xl border border-border bg-card/70 p-5"><p class="text-xs uppercase tracking-[0.18em] text-muted">04</p><p class="mt-2 text-sm font-semibold text-white">Template devolve HTML</p></div>
+          </div>
+
+          <div class="rounded-2xl border border-border bg-base/60 p-5">
+            <p class="text-sm leading-7 text-muted">Com isso, o menu deixa de ser só navegação e vira o próprio roteiro da explicação. Esse era o ponto que estava faltando.</p>
+          </div>
+
+          <div id="reference-library-slot" class="space-y-6"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="code-modal" class="fixed inset-0 z-50 hidden bg-slate-950/90 p-4 md:p-6" onclick="handleCodeModalBackdrop(event)">
+    <div class="mx-auto flex h-full max-w-6xl flex-col rounded-3xl border border-border bg-panel shadow-2xl shadow-black/50">
+      <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-4 md:px-6">
+        <div class="min-w-0">
+          <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Visualização expandida</p>
+          <h3 id="code-modal-title" class="truncate text-base font-semibold text-white md:text-lg">Trecho de código</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="code-modal-copy" type="button" class="code-action" aria-label="Copiar código aberto na janela">
+            <i data-lucide="copy" class="h-4 w-4"></i>
+            <span>Copiar</span>
+          </button>
+          <button type="button" onclick="closeCodeModal()" class="code-action" aria-label="Fechar visualização expandida">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </div>
+      <div class="min-h-0 flex-1 p-4 md:p-6">
+        <pre id="code-modal-pre" class="code-modal-pre"><code id="code-modal-code"></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div id="info-modal" class="fixed inset-0 z-50 hidden bg-slate-950/90 p-4 md:p-6" onclick="handleInfoModalBackdrop(event)">
+    <div class="mx-auto flex h-full max-w-3xl flex-col rounded-3xl border border-border bg-panel shadow-2xl shadow-black/50">
+      <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-4 md:px-6">
+        <div class="min-w-0">
+          <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Mais detalhes</p>
+          <h3 id="info-modal-title" class="truncate text-base font-semibold text-white md:text-lg">Explicação</h3>
+        </div>
+        <button type="button" onclick="closeInfoModal()" class="code-action" aria-label="Fechar detalhes">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <div class="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6">
+        <div id="info-modal-body" class="space-y-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const drawer = document.getElementById("sidebar-drawer");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const codeModal = document.getElementById("code-modal");
+    const codeModalTitle = document.getElementById("code-modal-title");
+    const codeModalCode = document.getElementById("code-modal-code");
+    const codeModalCopy = document.getElementById("code-modal-copy");
+    const infoModal = document.getElementById("info-modal");
+    const infoModalTitle = document.getElementById("info-modal-title");
+    const infoModalBody = document.getElementById("info-modal-body");
+    const referenceLibrary = document.getElementById("reference-library");
+    const referenceLibrarySlot = document.getElementById("reference-library-slot");
+
+    if (referenceLibrary && referenceLibrarySlot) {
+      referenceLibrarySlot.appendChild(referenceLibrary);
+    }
+
+    function syncBodyOverflow() {
+      const sidebarOpen = drawer.classList.contains("open");
+      const codeModalOpen = !codeModal.classList.contains("hidden");
+      const infoModalOpen = !infoModal.classList.contains("hidden");
+      document.body.style.overflow = sidebarOpen || codeModalOpen || infoModalOpen ? "hidden" : "";
+    }
+
+    function getButtonLabelNode(button) {
+      return button.querySelector("span") || button;
+    }
+
+    function openSidebar() {
+      drawer.classList.add("open");
+      backdrop.classList.remove("hidden");
+      syncBodyOverflow();
+    }
+
+    function closeSidebar() {
+      drawer.classList.remove("open");
+      backdrop.classList.add("hidden");
+      syncBodyOverflow();
+    }
+
+    function toggleNavGroup(groupName) {
+      const group = document.querySelector('[data-group="' + groupName + '"]');
+      if (!group) return;
+      group.classList.toggle("open");
+    }
+
+    function showStep(stepId) {
+      document.querySelectorAll(".step-content").forEach((el) => el.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach((el) => el.classList.remove("active"));
+
+      const content = document.getElementById(stepId);
+      const trigger = document.querySelector('[data-step="' + stepId + '"]');
+      if (!content || !trigger) return;
+
+      content.classList.add("active");
+      trigger.classList.add("active");
+
+      const main = document.querySelector("main");
+      if (main) main.scrollTop = 0;
+      if (window.innerWidth < 768) closeSidebar();
+    }
+
+    function fallbackCopy(text) {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      temp.setAttribute("readonly", "");
+      temp.style.position = "absolute";
+      temp.style.left = "-9999px";
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+    }
+
+    async function copyText(text, button) {
+      const labelNode = getButtonLabelNode(button);
+      const originalLabel = labelNode.textContent;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          fallbackCopy(text);
+        }
+        labelNode.textContent = "Copiado";
+      } catch (error) {
+        labelNode.textContent = "Falhou";
+      }
+
+      window.setTimeout(() => {
+        labelNode.textContent = originalLabel;
+      }, 1500);
+    }
+
+    function openCodeModal(title, text) {
+      codeModalTitle.textContent = title;
+      codeModalCode.textContent = text;
+      codeModal.classList.remove("hidden");
+      codeModalCopy.onclick = () => copyText(text, codeModalCopy);
+      syncBodyOverflow();
+    }
+
+    function closeCodeModal() {
+      codeModal.classList.add("hidden");
+      codeModalCode.textContent = "";
+      syncBodyOverflow();
+    }
+
+    function handleCodeModalBackdrop(event) {
+      if (event.target === codeModal) closeCodeModal();
+    }
+
+    function openInfoModal(title, body) {
+      infoModalTitle.textContent = title;
+      infoModalBody.innerHTML = "";
+
+      const panel = document.createElement("div");
+      panel.className = "rounded-2xl border border-border bg-base/55 p-5";
+      const segments = String(body || "")
+        .split("||")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (!segments.length) {
+        const copy = document.createElement("p");
+        copy.className = "text-sm leading-8 text-slate-300";
+        copy.textContent = body;
+        panel.appendChild(copy);
+      } else {
+        const stack = document.createElement("div");
+        stack.className = "space-y-3";
+
+        segments.forEach((segment) => {
+          const item = document.createElement("div");
+          item.className = "rounded-2xl border border-border bg-card/70 p-4";
+
+          const copy = document.createElement("p");
+          copy.className = "text-sm leading-8 text-slate-300";
+          copy.textContent = segment;
+
+          item.appendChild(copy);
+          stack.appendChild(item);
+        });
+
+        panel.appendChild(stack);
+      }
+
+      infoModalBody.appendChild(panel);
+      infoModal.classList.remove("hidden");
+      syncBodyOverflow();
+    }
+
+    function closeInfoModal() {
+      infoModal.classList.add("hidden");
+      infoModalTitle.textContent = "Explicação";
+      infoModalBody.innerHTML = "";
+      syncBodyOverflow();
+    }
+
+    function handleInfoModalBackdrop(event) {
+      if (event.target === infoModal) closeInfoModal();
+    }
+
+    document.querySelectorAll(".copy-trigger").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = document.getElementById(button.dataset.copyTarget);
+        if (!target) return;
+        copyText(target.textContent, button);
+      });
+    });
+
+    document.querySelectorAll(".expand-trigger").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = document.getElementById(button.dataset.expandTarget);
+        if (!target) return;
+        openCodeModal(button.dataset.expandTitle || "Trecho de código", target.textContent);
+      });
+    });
+
+    document.querySelectorAll(".info-trigger").forEach((button) => {
+      button.addEventListener("click", () => {
+        openInfoModal(button.dataset.infoTitle || "Explicação", button.dataset.infoBody || "");
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 768) closeSidebar();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (!codeModal.classList.contains("hidden")) {
+        closeCodeModal();
+        return;
+      }
+      if (!infoModal.classList.contains("hidden")) {
+        closeInfoModal();
+        return;
+      }
+      closeSidebar();
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
