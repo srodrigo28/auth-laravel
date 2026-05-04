@@ -10,6 +10,11 @@ Projeto de treinamento em Laravel.
 
 **Rodar o projeto**
 ```bash
+composer create-project laravel/laravel nome-do-projeto
+```
+
+**Rodar o projeto**
+```bash
 php artisan serve
 ```
 
